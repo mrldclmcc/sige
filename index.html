@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sige</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..700&family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&display=swap">
+<style>
+:root{--bg:#FAF8F3;--sf:#F1EEE6;--tx:#1F1D1A;--lk:#5E5A52;--ac:#9A3B1E;--bd:#D9D4C7;--hv:#E5E0D2;--font:"Literata",Georgia,serif;--fs:20px;--w:32em;color-scheme:light dark}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#1B1A18;--sf:#242220;--tx:#EDE9E0;--lk:#A39E93;--ac:#E8A87C;--bd:#3A3733;--hv:#2F2C29}}
+:root[data-theme=dark]{--bg:#1B1A18;--sf:#242220;--tx:#EDE9E0;--lk:#A39E93;--ac:#E8A87C;--bd:#3A3733;--hv:#2F2C29;color-scheme:dark}
+:root[data-theme=light]{color-scheme:light}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{display:flex;background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+#main{flex:1;min-width:0;display:flex;flex-direction:column}
+#page{position:relative;flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--bd) transparent;overflow-anchor:none}
+#doc{width:min(var(--w),calc(100% - 64px));margin:0 auto;font-family:var(--font);font-size:var(--fs);line-height:1.6;font-optical-sizing:auto;font-kerning:normal;font-variant-ligatures:common-ligatures;font-variant-numeric:lining-nums}
+#doc p{margin:0 0 1.6em;white-space:pre-wrap;overflow-wrap:break-word;text-wrap:pretty;hyphens:none;color:var(--lk)}
+#live{color:var(--tx);outline:0;caret-color:var(--ac);-webkit-user-select:text;user-select:text}
+#doc.blank #live::after{content:attr(data-ph);color:var(--lk);pointer-events:none}
+#doc p.just-locked #live::before{content:"";display:inline-block;width:1px;height:1.08em;margin:0 .18em 0 .04em;vertical-align:-.15em;background:var(--bd);opacity:.85;animation:settle-frontier .52s ease-out}
+@keyframes settle-frontier{0%{opacity:1;transform:scaleY(.72)}100%{opacity:.55;transform:scaleY(1)}}
+.flag{color:var(--lk);opacity:.7}
+#doc p.h1{font-weight:600;font-size:1.25em;line-height:1.28;margin-bottom:1.28em}
+#gh{-webkit-user-select:none;user-select:none;color:var(--lk)}
+#gh.on::after{content:'*';opacity:.7}
+footer{height:48px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 24px;font-size:14px;color:var(--lk)}
+footer .ctl{display:flex;gap:8px;opacity:1;transition:opacity .2s ease}
+.typing .ctl{opacity:0}
+.typing .ctl:focus-within{opacity:1}
+.typing #st,.typing #nb,.typing #fsep{display:none}
+#nb,#st{transition:opacity .2s ease}
+#st{white-space:nowrap}
+#spotlight{position:absolute;z-index:4;pointer-events:none;border:1px solid var(--ac);background:var(--hv);border-radius:3px;opacity:0;transform:scale(.985);transition:opacity .18s ease,transform .18s ease}
+#spotlight.show{opacity:.85;transform:scale(1)}
+#spotlight[hidden]{display:none}
+.tn{font-variant-numeric:tabular-nums}
+.hb{width:24px;height:24px;padding:0;align-self:center;border:1px solid var(--bd);border-radius:50%;font-size:14px;line-height:1}
+#hd{padding:0}
+#hd .in{padding:24px}
+#hd h3{font-size:16px;font-weight:600;margin:24px 0 8px}
+#hd p,#hd li{margin:0 0 8px}
+#hd ul{margin:0;padding-left:24px}
+#hd kbd{font:inherit;border:1px solid var(--bd);border-radius:4px;padding:0 4px}
+button{font:inherit;color:inherit;background:none;border:1px solid transparent;border-radius:4px;padding:4px 8px;cursor:pointer}
+button:hover{background:var(--hv)}
+button:active{border-color:var(--bd)}
+button:disabled{opacity:.5;cursor:default}
+button.pri{background:var(--tx);color:var(--bg)}
+button.pri:hover{opacity:.9}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+#live:focus-visible{outline:0}
+#panel{width:336px;flex:none;background:var(--sf);border-left:1px solid var(--bd);padding:24px;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:16px}
+#panel[hidden]{display:none}
+.tg{display:inline-block;border-left:2px solid var(--bd);padding-left:8px}
+h2{font-size:16px;font-weight:600;margin:0}
+textarea,select,input[type=number]{font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:4px;padding:8px;width:100%}
+textarea{resize:none;display:block}
+#nl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:24px}
+.tg{font-weight:600;font-size:14px}
+.ph{display:flex;align-items:center;justify-content:space-between}
+.nt{border-color:transparent;background:none;padding:4px 8px;margin:0 -8px;width:calc(100% + 16px);min-height:32px}
+.nt:hover,.nt:focus{border-color:var(--bd)}
+#nf{min-height:40px}
+.cx{display:block;text-align:left;color:var(--lk);font-size:14px;padding:4px 0}
+.help{color:var(--lk);font-size:14px}
+.help p{margin:0 0 8px}
+dialog{background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:24px;width:min(480px,calc(100% - 32px))}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+fieldset{border:1px solid var(--bd);border-radius:4px;margin:16px 0;padding:8px 16px 16px}
+legend{padding:0 8px;font-weight:600}
+fieldset label{display:block;margin-top:8px}
+small{display:block;color:var(--lk);font-size:14px;margin-left:24px}
+.row{display:grid;grid-template-columns:128px 1fr;align-items:center;gap:8px;margin-bottom:8px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-top:24px}
+@media(max-width:720px){
+  #panel{position:fixed;z-index:20;top:0;right:0;bottom:0;width:min(336px,92vw);border-left:1px solid var(--bd);box-shadow:-20px 0 48px rgba(0,0,0,.14)}
+  footer{padding:0 16px}
+}
+@media(max-width:560px){
+  .row{grid-template-columns:1fr;gap:4px}
+  .bar{justify-content:stretch}
+  .bar button{flex:1 1 auto}
+}
+@media(prefers-reduced-motion: reduce){
+  footer .ctl{transition:none}
+  #spotlight{transition:none}
+  #doc p.just-locked #live::before{animation:none}
+}
+</style>
+</head>
+<body>
+<div id="main">
+  <div id="page"><div id="doc" class="blank"></div><div id="spotlight" aria-hidden="true" hidden></div></div>
+  <footer>
+    <div class="tn"><span id="wc"></span><span id="st" aria-live="polite"></span><span id="fsep"> · </span><button id="nb" title="Notes"></button></div>
+    <div class="ctl"><button id="bs">Settings</button><button id="bh" class="hb" aria-label="Help and tips" title="Help and tips">?</button><button id="be">Export</button></div>
+  </footer>
+</div>
+<aside id="panel" hidden aria-label="Notes">
+  <div class="ph"><h2>Notes</h2><button id="nc">Close</button></div>
+  <textarea id="nf" rows="1" aria-label="New note" placeholder="Write a note, then press Enter."></textarea>
+  <ol id="nl"></ol>
+  <div id="ne" class="help">
+    <p>Notes are the one place you can act on an earlier thought. Type a tag in your draft and the note appears here.</p>
+    <p><span class="tg">[TK]</span> a fact or name to add later<br><span class="tg">[source]</span> something to cite or check<br><span class="tg">[word]</span> a word you can't find yet<br><span class="tg">[fix]</span> something earlier is wrong<br><span class="tg">[cont]</span> a continuity problem</p>
+    <p>Add detail after a colon: [TK: year the harbor closed]. Press <span class="mk"></span>+J to write a free note.</p>
+  </div>
+</aside>
+
+<dialog id="sd" aria-labelledby="sh">
+  <h2 id="sh">Settings</h2>
+  <fieldset><legend>Locking</legend>
+    <label><input type="radio" name="lv" value="none"> Character<small>Each character becomes history as you type.</small></label>
+    <label><input type="radio" name="lv" value="word"> Word<small>The current word locks when you press the space bar.</small></label>
+    <label><input type="radio" name="lv" value="sentence"> Sentence<small>The current sentence locks after . ? or ! and a space.</small></label>
+    <label><input type="radio" name="lv" value="paragraph"> Paragraph<small>The current paragraph locks when you press Enter.</small></label>
+  </fieldset>
+  <div class="row"><label for="sf">Typeface</label><select id="sf"><option>Literata</option><option>Newsreader</option><option>Courier Prime</option></select></div>
+  <div class="row"><label for="sz">Text size</label><select id="sz"><option value="18">18 px</option><option value="20">20 px</option><option value="22">22 px</option></select></div>
+  <div class="row"><label for="th">Theme</label><select id="th"><option value="system">Match system</option><option value="light">Light</option><option value="dark">Dark</option></select></div>
+  <div class="row"><label for="gl">Session goal</label><input type="number" id="gl" min="0" step="50" placeholder="Words, 0 for none"></div>
+  <div class="bar">
+    <button id="em">Export Markdown</button><button id="et">Export plain text</button><button id="nd">New document…</button><button id="sc" class="pri">Done</button>
+  </div>
+</dialog>
+
+<dialog id="hd" aria-labelledby="hh"><div class="in">
+  <h2 id="hh">How Sige works</h2>
+  <h3>The one rule</h3>
+  <p>You can only write at the end of your draft. Text you have finished is locked, and you cannot click or arrow back into it. Scroll up to read. You can select and copy any text, but you cannot edit it. Then keep writing, and revise later in another app.</p>
+  <p>Settings choose the writing frontier: text locks at the character, word, sentence, or paragraph boundary. Anything behind that frontier is history and cannot be undone. Enter always starts a new paragraph.</p>
+  <h3>Tags</h3>
+  <p>Type a tag anywhere in your draft to leave yourself a note and keep going. Add detail after a colon, for example [TK: year the harbor closed].</p>
+  <ul>
+    <li><b>[TK]</b> a fact, name, or number to add later</li>
+    <li><b>[source]</b> something to cite or check</li>
+    <li><b>[word]</b> a word you can't find yet</li>
+    <li><b>[fix]</b> something earlier is wrong</li>
+    <li><b>[cont]</b> a continuity problem</li>
+  </ul>
+  <h3>Titles</h3>
+  <p>Start a paragraph with # and a space to make it a bold title. A title locks when you press Enter, and the # then disappears from the screen. The # stays in the export, and the first title names your export file.</p>
+  <h3>Notes and shortcuts</h3>
+  <ul>
+    <li><kbd class="mk"></kbd>+<kbd>J</kbd> (or <kbd>Alt</kbd>+<kbd>J</kbd>) opens the notes panel with a new note ready. Press Enter to save and keep writing.</li>
+    <li>Click outside the panel to close it. In the panel you can edit any note.</li>
+    <li><kbd class="mk"></kbd>+<kbd>S</kbd> exports Markdown. <kbd class="mk"></kbd>+<kbd>,</kbd> opens settings.</li>
+    <li><kbd class="mk"></kbd>+<kbd>Z</kbd> undoes your most recent action while it is still inside the writing frontier. Undo never reopens locked text.</li>
+    <li><kbd class="mk"></kbd>+<kbd>I</kbd> starts italics and shows the closing asterisk after your cursor. To step past the closing asterisk and keep writing in plain text, press the Right Arrow key or End, press it again, or type *. If you press Enter first, the closing asterisk is added for you. Pressing it twice in a row cancels.</li>
+    <li>Type -- for a dash.</li>
+  </ul>
+  <h3>Export</h3>
+  <p>Markdown export puts tags and note markers in code formatting so they stand out in your editor. A Notes section at the end gives each note's paragraph, line, and nearby words. Export is the handoff from writing forward to revising later.</p>
+  <div class="bar"><button id="hc" class="pri">Close</button></div>
+</div></dialog>
+
+<dialog id="nw" aria-labelledby="nh">
+  <h2 id="nh">Start a new document?</h2>
+  <p>This erases the current draft from this browser. Export it first if you want to keep it.</p>
+  <div class="bar"><button id="nx">Cancel</button><button id="ne2">Erase draft</button><button id="nm" class="pri">Export, then start new</button></div>
+</dialog>
+
+<script>
+const $=s=>document.querySelector(s);
+const KEY='forward:doc',CK='forward:cfg',LANG='en';
+const Q={en:{o2:'\u201c',c2:'\u201d',o1:'\u2018',c1:'\u2019'}};
+const TAG=/\[(TK|source|word|fix|cont)(?::([^\]\n]*))?\]/gi;
+const CANON={tk:'TK',source:'source',word:'word',fix:'fix',cont:'cont'};
+const mac=/Mac|iPhone|iPad/.test(navigator.platform||'');
+let S={paras:[],cur:'',live:'',pend:'',notes:[],edits:{},nid:1};
+let cfg={level:'sentence',font:'Literata',size:20,theme:'system',goal:0};
+try{Object.assign(S,JSON.parse(localStorage.getItem(KEY)||'{}'));Object.assign(cfg,JSON.parse(localStorage.getItem(CK)||'{}'))}catch(e){}
+
+const doc=$('#doc'),page=$('#page'),panel=$('#panel'),nf=$('#nf'),nl=$('#nl');
+const live=document.createElement('span');
+live.id='live';live.spellcheck=true;live.lang=LANG;live.setAttribute('role','textbox');live.setAttribute('aria-multiline','true');
+live.setAttribute('aria-label','Draft. Earlier text is locked. You can only write forward.');
+live.dataset.ph='Begin writing. You can only move forward. Start a paragraph with # for a title.';
+live.contentEditable='plaintext-only';if(live.contentEditable!=='plaintext-only')live.contentEditable='true';
+let curp,lk,composing=false,base=0,lastSig='',tm;
+let settleTimer=0,spotlightTimer=0,statusTimer=0,statusHold=0;
+let undoStack=[],undoGroup=null,undoTimer=0;
+const UNDO_MAX=50,UNDO_IDLE=900;
+document.querySelectorAll('.mk').forEach(e=>e.textContent=mac?'Cmd':'Ctrl');
+
+/* ---------- text helpers ---------- */
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const fmt=s=>esc(isH1(s)?s.slice(2):s).replace(/\*([^*\n]+)\*/g,'<em>$1</em>').replace(new RegExp(TAG.source,'gi'),'<span class="flag">$&</span>');
+const model=()=>[...S.paras,S.cur+S.live+S.pend];
+const isH1=t=>/^# /.test(t);
+const gh=document.createElement('span');gh.id='gh';gh.setAttribute('aria-hidden','true');
+const text=()=>model().join('\n');
+const readLive=()=>live.textContent.replace(/[\u200b\n]/g,'').replace(/\u00a0/g,' ');
+
+function smart(t,prev){
+  t=t.replace(/--/g,'\u2014').replace(/\.\.\./g,'\u2026');
+  const q=Q[LANG];let o='';
+  for(const ch of t){
+    if(ch==='"'||ch==="'"){
+      const pc=o?o[o.length-1]:prev;
+      const open=!pc||/[\s(\[{\u2014\u2013\u201c\u2018]/.test(pc);
+      o+=ch==='"'?(open?q.o2:q.c2):(open?q.o1:q.c1);
+    }else o+=ch;
+  }
+  return o;
+}
+/* The one place that decides where text locks. Swap in Intl.Segmenter here for other languages. */
+const TN=['tk','source','word','fix','cont'];
+function openTag(t){
+  const m=/\[([a-z]*)(:[^\]\n]*)?$/i.exec(t);if(!m)return -1;
+  const n=m[1].toLowerCase();
+  return (m[2]!==undefined?TN.includes(n):TN.some(x=>x.startsWith(n)))?m.index:-1;
+}
+function lockPoint(t){
+  if(cfg.level==='none')return t.length;
+  const k=openTag(t);if(k>=0)t=t.slice(0,k);
+  const u=t.replace(new RegExp(TAG.source,'gi'),m=>'_'.repeat(m.length));
+  if(cfg.level==='word'){let i=u.length-1;while(i>=0&&!/\s/.test(u[i]))i--;return i+1}
+  if(cfg.level==='sentence'){const re=/[.?!]+["\u201d\u2019')\]*]*\s/g;let m,e=0;while(m=re.exec(u))e=re.lastIndex;return e}
+  return 0;
+}
+
+/* ---------- document model ---------- */
+function mark(p,t){
+  const h=isH1(t);p.classList.toggle('h1',h);
+  if(h){p.setAttribute('role','heading');p.setAttribute('aria-level','1')}
+  else{p.removeAttribute('role');p.removeAttribute('aria-level')}
+}
+function build(){
+  doc.textContent='';
+  S.paras.forEach(t=>{const p=document.createElement('p');p.innerHTML=fmt(t);mark(p,t);doc.append(p)});
+  mkCur();
+}
+function mkCur(){
+  curp=document.createElement('p');lk=document.createElement('span');
+  lk.innerHTML=fmt(S.cur);curp.append(lk,live,gh);doc.append(curp);
+}
+function commit(t){
+  if(!S.cur)t=t.replace(/^\s+/,'');
+  t=smart(t,S.cur.slice(-1));
+  S.live=t;
+  let n=lockPoint(t);
+  if(n>0&&cfg.level==='sentence'&&isH1(S.cur+t))n=0;
+  let locked=false;
+  if(n>0){S.cur+=t.slice(0,n);S.live=t.slice(n);lk.innerHTML=fmt(S.cur);locked=true;clearUndoBoundary();flashLock()}
+  if(S.pend&&((S.cur+S.live).match(/\*/g)||[]).length%2===0)S.pend='';
+  return locked;
+}
+function enter(){
+  S.cur=(S.cur+S.live).replace(/\s+$/,'')+S.pend;S.live='';S.pend='';
+  if(!S.cur||/^\*+$/.test(S.cur)){S.cur='';lk.innerHTML='';return false}
+  clearUndoBoundary();
+  lk.innerHTML=fmt(S.cur);mark(curp,S.cur);S.paras.push(S.cur);S.cur='';mkCur();
+  return true;
+}
+function setCaretEnd(){
+  const s=getSelection(),r=document.createRange();
+  r.selectNodeContents(live);r.collapse(false);s.removeAllRanges();s.addRange(r);
+}
+function focusLive(){live.focus({preventScroll:true});setCaretEnd()}
+function sync(){
+  const want='\u200b'+S.live;
+  const dt=[...live.querySelectorAll('.flag')].map(x=>x.textContent).join('|');
+  const wt=(S.live.match(new RegExp(TAG.source,'gi'))||[]).join('|');
+  if(live.textContent!==want||dt!==wt){
+    live.innerHTML='\u200b'+esc(S.live).replace(new RegExp(TAG.source,'gi'),'<span class="flag">$&</span>');
+    if(document.activeElement===live)setCaretEnd();
+  }
+  gh.className=S.pend?'on':'';
+  curp.classList.toggle('h1',isH1(S.cur+S.live));
+  refresh();
+}
+
+/* ---------- v2 state helpers ---------- */
+function setTyping(){
+  document.body.classList.add('typing');
+}
+function setStatus(s){$('#st').textContent=s?' \u00b7 '+s:''}
+function holdStatus(s,ms=2400){
+  statusHold=Date.now()+ms;setStatus(s);
+  clearTimeout(statusTimer);
+  statusTimer=setTimeout(()=>{if(Date.now()>=statusHold){statusHold=0;setStatus('Saved locally')}},ms+10);
+}
+function sameFront(a,b){return !!a&&a.live===b.live&&a.pend===b.pend}
+function closeUndoGroup(){
+  clearTimeout(undoTimer);
+  if(!undoGroup)return;
+  if(!sameFront(undoGroup,S)){
+    undoStack.push({live:undoGroup.live,pend:undoGroup.pend});
+    if(undoStack.length>UNDO_MAX)undoStack.splice(0,undoStack.length-UNDO_MAX);
+  }
+  undoGroup=null;
+}
+function beginUndo(kind){
+  if(undoGroup&&undoGroup.kind===kind){
+    undoGroup.last=Date.now();clearTimeout(undoTimer);undoTimer=setTimeout(closeUndoGroup,UNDO_IDLE);return;
+  }
+  closeUndoGroup();undoGroup={kind,live:S.live,pend:S.pend,last:Date.now()};
+  undoTimer=setTimeout(closeUndoGroup,UNDO_IDLE);
+}
+function clearUndoBoundary(){clearTimeout(undoTimer);undoTimer=0;undoGroup=null;undoStack=[]}
+function pruneEdits(){
+  const valid=new Set();let m;const re=new RegExp(TAG.source,'gi'),t=text();
+  while(m=re.exec(t))valid.add(String(m.index));
+  Object.keys(S.edits).forEach(k=>{if(!valid.has(String(k)))delete S.edits[k]});
+}
+function undo(){
+  closeUndoGroup();const u=undoStack.pop();if(!u)return;
+  S.live=u.live;S.pend=u.pend;pruneEdits();hideSpotlight();setTyping();sync();focusLive();
+}
+function hideSpotlight(){
+  clearTimeout(spotlightTimer);const sp=$('#spotlight');sp.classList.remove('show');sp.hidden=true;
+}
+function flashLock(){
+  curp.classList.remove('just-locked');void curp.offsetWidth;curp.classList.add('just-locked');
+  clearTimeout(settleTimer);settleTimer=setTimeout(()=>curp.classList.remove('just-locked'),520);
+}
+function makeRange(root,off,len){
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n,acc=0,start=null,end=null;
+  const target=Math.max(0,off),finish=Math.max(target,target+Math.max(0,len));
+  while(n=walker.nextNode()){
+    const raw=n.nodeValue,clean=raw.replace(/\u200b/g,''),l=clean.length;
+    if(start===null&&target<=acc+l){
+      const d=Math.max(0,Math.min(l,target-acc));
+      start={n,o:d+(raw.startsWith('\u200b')?1:0)};
+    }
+    if(finish<=acc+l){
+      const d=Math.max(0,Math.min(l,finish-acc));
+      end={n,o:d+(raw.startsWith('\u200b')?1:0)};break;
+    }
+    acc+=l;
+  }
+  if(!start){const r=document.createRange();r.selectNodeContents(root);r.collapse(false);return r}
+  if(!end)end=start;
+  const r=document.createRange();r.setStart(start.n,start.o);r.setEnd(end.n,end.o);return r;
+}
+function placeSpotlight(range){
+  if(!range)return;const rs=range.getClientRects();if(!rs.length)return;
+  const r=rs[0],pr=page.getBoundingClientRect(),sp=$('#spotlight');
+  sp.style.left=Math.max(0,r.left-pr.left+page.scrollLeft-4)+'px';
+  sp.style.top=Math.max(0,r.top-pr.top+page.scrollTop-3)+'px';
+  sp.style.width=Math.max(2,r.width+8)+'px';sp.style.height=Math.max(20,r.height+6)+'px';
+  sp.hidden=false;requestAnimationFrame(()=>sp.classList.add('show'));
+}
+function goTo(pos,len=0){
+  const m=model();let acc=0,i=0;
+  for(;i<m.length;i++){if(pos<=acc+m[i].length)break;acc+=m[i].length+1}
+  const el=doc.children[Math.min(i,doc.children.length-1)];if(!el)return;
+  hideSpotlight();
+  glide(page.scrollTop+el.getBoundingClientRect().top-(page.getBoundingClientRect().top+page.clientHeight*.4),260);
+  clearTimeout(spotlightTimer);
+  spotlightTimer=setTimeout(()=>{
+    const full=text(),w=where(full,pos),p=doc.children[Math.min(w.p-1,doc.children.length-1)];if(!p)return;
+    let off=w.off;if(isH1(w.para||''))off=Math.max(0,off-2);
+    placeSpotlight(makeRange(p,off,len));
+    setTimeout(hideSpotlight,1200);
+  },275);
+}
+
+/* ---------- notes ---------- */
+function allNotes(t){
+  const out=[];let m;const re=new RegExp(TAG.source,'gi');
+  while(m=re.exec(t))out.push({typed:1,len:m[0].length,tag:CANON[m[1].toLowerCase()],pos:m.index,key:m.index,text:S.edits[m.index]??(m[2]||'').trim()});
+  S.notes.forEach(n=>out.push({typed:0,tag:'note',pos:n.pos,id:n.id,text:n.text}));
+  out.sort((a,b)=>a.pos-b.pos||b.typed-a.typed);
+  out.forEach((n,i)=>n.n=i+1);
+  return out;
+}
+function where(t,pos){
+  const ps=t.replace(/\n+$/,'').split('\n');let acc=0,i=0;
+  for(;i<ps.length-1;i++){if(pos<=acc+ps[i].length)break;acc+=ps[i].length+1}
+  return {p:i+1,of:ps.length,off:Math.min(pos-acc,ps[i].length),para:ps[i]};
+}
+function near(t,n){
+  const w=where(t,n.pos),cl=x=>x.replace(/\*/g,'').split(/\s+/).filter(Boolean);
+  const b=cl(w.para.slice(0,w.off)).slice(-6);
+  if(b.length>=3)return 'after \u201c\u2026'+b.join(' ')+'\u201d';
+  const a=cl(w.para.slice(w.off+(n.len||0))).slice(0,6);
+  return a.length?'before \u201c'+a.join(' ')+'\u2026\u201d':'at the start';
+}
+const label=(t,n)=>'\u00b6 '+where(t,n.pos).p+' \u00b7 '+near(t,n);
+function autosize(a){if(!a.offsetParent)return;a.style.height='auto';a.style.height=a.scrollHeight+a.offsetHeight-a.clientHeight+'px'}
+function renderNotes(ns,t){
+  nl.textContent='';$('#ne').hidden=ns.length>0;
+  ns.forEach(n=>{
+    const li=document.createElement('li'),h=document.createElement('div');
+    h.className='tg'+(n.typed?' tag-'+n.tag.toLowerCase():'');h.textContent=n.typed?'['+n.tag+']':'Note '+n.n;
+    const a=document.createElement('textarea');
+    a.className='nt';a.rows=1;a.value=n.text;a.setAttribute('aria-label','Text of note '+n.n);a.placeholder='Add detail';
+    a.addEventListener('input',()=>{
+      autosize(a);
+      if(n.typed)S.edits[n.key]=a.value;else{const x=S.notes.find(z=>z.id===n.id);if(x)x.text=a.value}
+      lastSig=sig(allNotes(text()));saveSoon();
+    });
+    const c=document.createElement('button');c.className='cx';c.textContent=label(t,n);c.title='Show this place in the draft';
+    c.addEventListener('click',()=>goTo(n.pos,n.len||0));
+    li.append(h,a,c);
+    if(!n.typed){
+      const d=document.createElement('button');d.className='cx';d.textContent='Delete note';
+      d.addEventListener('click',()=>{S.notes=S.notes.filter(z=>z.id!==n.id);refresh()});
+      li.append(d);
+    }
+    nl.append(li);autosize(a);
+  });
+}
+const sig=ns=>JSON.stringify(ns.map(n=>[n.pos,n.tag,n.text,n.typed]));
+
+function openNotes(){
+  panel.hidden=false;pad();
+  nl.querySelectorAll('textarea').forEach(autosize);autosize(nf);
+  nf.focus();tw();
+}
+function closeNotes(){
+  const v=nf.value.trim();
+  if(v)S.notes.push({id:S.nid++,pos:Math.max(0,text().length-S.pend.length),text:v});
+  nf.value='';panel.hidden=true;pad();focusLive();refresh();
+}
+function toggleNotes(){
+  if(!panel.hidden&&document.activeElement===nf){if(!nf.value.trim())closeNotes()}
+  else openNotes();
+}
+nf.addEventListener('input',()=>autosize(nf));
+nf.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!e.shiftKey){
+    e.preventDefault();closeNotes();
+  }
+});
+
+/* ---------- display ---------- */
+function pad(){doc.style.paddingTop=page.clientHeight*.4+'px';doc.style.paddingBottom=page.clientHeight*.6+'px'}
+let anim=null,raf=0;
+const still=matchMedia('(prefers-reduced-motion: reduce)');
+function glide(to,dur){
+  to=Math.max(0,Math.min(to,page.scrollHeight-page.clientHeight));
+  if(!dur||still.matches){anim=null;page.scrollTop=to;return}
+  anim={from:page.scrollTop,to,t0:performance.now(),dur};
+  if(!raf)raf=requestAnimationFrame(step);
+}
+function step(now){
+  const a=anim;raf=0;if(!a)return;
+  const k=Math.min(1,(now-a.t0)/a.dur);
+  page.scrollTop=a.from+(a.to-a.from)*(1-Math.pow(1-k,3));
+  if(k<1)raf=requestAnimationFrame(step);else anim=null;
+}
+function tw(instant){
+  const r=live.getClientRects();if(!r.length)return;
+  const b=r[r.length-1],pr=page.getBoundingClientRect(),d=b.top-(pr.top+pr.height*.4);
+  if(Math.abs(d)>2)glide(page.scrollTop+d,instant?0:140);
+}
+const wcount=t=>(t.replace(/^# /gm,'').match(/\S+/g)||[]).length;
+function refresh(){
+  const t=text();
+  S.notes.forEach(n=>{if(n.pos>t.length)n.pos=t.length});
+  const ns=allNotes(t),wc=wcount(t);
+  doc.classList.toggle('blank',!t);
+  $('#wc').textContent=wc.toLocaleString()+(wc===1?' word':' words')+(cfg.goal>0?' (session '+Math.max(0,wc-base).toLocaleString()+' of '+cfg.goal.toLocaleString()+')':'');
+  $('#nb').textContent=ns.length+(ns.length===1?' note':' notes');
+  const s=sig(ns);if(s!==lastSig){lastSig=s;renderNotes(ns,t)}
+  saveSoon();tw();
+}
+function save(){
+  try{localStorage.setItem(KEY,JSON.stringify(S));if(Date.now()>=statusHold&&$('#st').textContent!==' · Saved locally')setStatus('Saved locally')}
+  catch(e){statusHold=0;setStatus('Not saved locally · Export your draft')}
+}
+function saveSoon(){clearTimeout(tm);tm=setTimeout(save,300)}
+
+/* ---------- export ---------- */
+function fname(t){
+  const h=t.split('\n').find(isH1);
+  const slug=h?h.slice(2).replace(/[*`]|\[[^\]]*\]/g,'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60).replace(/-+$/,''):'';
+  return slug||'draft-'+new Date().toISOString().slice(0,10);
+}
+function exp(kind){
+  closeUndoGroup();
+  const t=text().replace(/\n+$/,''),ns=allNotes(t),md=kind==='md';let b=t;
+  ns.filter(n=>!n.typed).sort((a,c)=>c.pos-a.pos).forEach(n=>{
+    const sp=b[n.pos-1]&&!/\s/.test(b[n.pos-1])?' ':'';
+    b=b.slice(0,n.pos)+sp+(md?'`[note '+n.n+']`':'[note '+n.n+']')+b.slice(n.pos);
+  });
+  b=b.replace(/\n/g,'\n\n');
+  if(md)b=b.replace(new RegExp(TAG.source,'gi'),m=>'`'+m+'`');
+  else b=b.replace(/\*([^*\n]+)\*/g,'$1').replace(/^# /gm,'');
+  const L=ns.map(n=>{
+    const w=where(t,n.pos),lab=n.typed?n.tag:'note',tx=n.text?': '+n.text:'';
+    const cx='\u00b6 '+w.p+' of '+w.of+' \u00b7 line '+(2*w.p-1)+' \u00b7 '+near(t,n)+(n.typed?'':' \u00b7 marked [note '+n.n+'] in the draft');
+    return md?n.n+'. **'+lab+'**'+tx+'  \n   '+cx:n.n+'. '+lab+tx+'\n   '+cx;
+  });
+  let out=b+'\n';
+  if(ns.length){
+    const cnt={};ns.forEach(n=>cnt[n.tag]=(cnt[n.tag]||0)+1);
+    const sum=ns.length+(ns.length===1?' note':' notes')+': '+Object.entries(cnt).map(([k,v])=>v+' '+k).join(', ')+'.\nLine numbers count lines in this file. Each paragraph is one line, followed by a blank line.';
+    out=b+(md?'\n\n---\n\n## Notes\n\n':'\n\n----\nNOTES\n\n')+sum.replace('\n',md?'  \n':'\n')+'\n\n'+L.join('\n\n')+'\n';
+  }
+  const filename=fname(t)+(md?'.md':'.txt');
+  const url=URL.createObjectURL(new Blob([out],{type:'text/plain;charset=utf-8'}));
+  const a=document.createElement('a');a.href=url;a.download=filename;
+  document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  holdStatus('Exported '+filename,2400);focusLive();return filename;
+}
+
+/* ---------- settings ---------- */
+function applyCfg(){
+  const r=document.documentElement;
+  if(cfg.theme==='system')r.removeAttribute('data-theme');else r.dataset.theme=cfg.theme;
+  const cour=cfg.font==='Courier Prime';
+  r.style.setProperty('--font','"'+cfg.font+'",'+(cour?'"Courier New",monospace':'Georgia,serif'));
+  r.style.setProperty('--fs',cfg.size+'px');
+  r.style.setProperty('--w',cour?'39em':'32em');
+  try{localStorage.setItem(CK,JSON.stringify(cfg))}catch(e){}
+  pad();tw();
+}
+function openSet(){
+  closeUndoGroup();document.body.classList.remove('typing');document.querySelectorAll('[name=lv]').forEach(r=>r.checked=r.value===cfg.level);
+  $('#sf').value=cfg.font;$('#sz').value=cfg.size;$('#th').value=cfg.theme;$('#gl').value=cfg.goal||'';
+  $('#sd').showModal();
+}
+$('#sd').addEventListener('input',()=>{
+  const lv=document.querySelector('[name=lv]:checked');
+  if(lv)cfg.level=lv.value;
+  cfg.font=$('#sf').value;cfg.size=+$('#sz').value;cfg.theme=$('#th').value;cfg.goal=Math.max(0,parseInt($('#gl').value)||0);
+  applyCfg();refresh();
+});
+function erase(){
+  clearUndoBoundary();hideSpotlight();S={paras:[],cur:'',live:'',pend:'',notes:[],edits:{},nid:1};save();build();base=0;lastSig='';
+  $('#nw').close();$('#sd').close();sync();
+}
+$('#bs').onclick=openSet;$('#bh').onclick=()=>$('#hd').showModal();
+$('#hc').onclick=()=>$('#hd').close();
+$('#hd').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.close()});$('#be').onclick=()=>exp('md');
+$('#em').onclick=()=>exp('md');$('#et').onclick=()=>exp('txt');
+$('#sc').onclick=()=>$('#sd').close();
+$('#nd').onclick=()=>$('#nw').showModal();
+$('#nx').onclick=()=>$('#nw').close();
+$('#ne2').onclick=erase;
+$('#nm').onclick=()=>{exp('md');setTimeout(erase,300)};
+$('#nb').onclick=()=>panel.hidden?openNotes():closeNotes();
+document.querySelectorAll('dialog').forEach(d=>d.addEventListener('close',()=>{if(!document.querySelector('dialog[open]'))focusLive()}));
+$('#nb').title='Notes ('+(mac?'Cmd':'Ctrl')+'+J)';
+$('#bs').title='Settings ('+(mac?'Cmd':'Ctrl')+'+,)';
+$('#be').title='Export as Markdown ('+(mac?'Cmd':'Ctrl')+'+S)';
+
+/* ---------- the forward-only rules ---------- */
+/* Cmd/Ctrl+I types an opening asterisk and shows a pending closer after the cursor.
+   The closer is not editable text. It is added when italics are closed, when you type *, or at the end of the paragraph. */
+function italic(){
+  if(document.activeElement!==live||!getSelection().isCollapsed)focusLive();
+  beginUndo('format');let locked=false;
+  if(S.pend){
+    if((S.live||S.cur).endsWith('*')){
+      if(S.live)locked=commit(S.live.slice(0,-1));else{S.cur=S.cur.slice(0,-1);lk.innerHTML=fmt(S.cur)}
+      S.pend='';
+    }else{locked=commit(S.live+'*');S.pend=''}
+  }else{locked=commit(S.live+'*');S.pend='*'}
+  if(locked)clearUndoBoundary();else closeUndoGroup();sync();setTyping();hideSpotlight();
+}
+const NAV=new Set(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End','Delete']);
+addEventListener('keydown',e=>{
+  const mod=e.ctrlKey||e.metaKey,t=e.target;
+  if(e.key==='Escape'&&!panel.hidden&&!t.closest('dialog')){e.preventDefault();closeNotes();return}
+  if((mod||e.altKey)&&e.code==='KeyJ'){e.preventDefault();toggleNotes();return}
+  if(mod&&e.key===','){e.preventDefault();openSet();return}
+  if(mod&&e.code==='KeyS'){e.preventDefault();exp('md');return}
+  if(t.closest&&t.closest('dialog,#panel,footer'))return;
+  if(composing||e.isComposing)return;
+  if(['Shift','Control','Alt','Meta','CapsLock'].includes(e.key))return;
+  if(mod&&(e.code==='KeyC'||e.code==='Insert'))return;
+  if(mod&&e.code==='KeyA'){e.preventDefault();const r=document.createRange(),sl=getSelection();r.selectNodeContents(doc);sl.removeAllRanges();sl.addRange(r);return}
+  if(mod&&!e.shiftKey&&e.code==='KeyZ'){e.preventDefault();undo();return}
+  if(mod&&e.code==='KeyI'){e.preventDefault();italic();return}
+  if((e.key==='ArrowRight'||e.key==='End')&&S.pend&&!mod&&!e.shiftKey){
+    e.preventDefault();if(document.activeElement!==live)focusLive();
+    beginUndo('format');const locked=commit(S.live+'*');S.pend='';if(locked)clearUndoBoundary();else closeUndoGroup();sync();return;
+  }
+  if(NAV.has(e.key)||(mod&&/^[zyx]$/i.test(e.key))||(mod&&e.code==='KeyZ')){e.preventDefault();return}
+  if(e.key==='PageUp'||e.key==='PageDown'){e.preventDefault();page.scrollBy(0,(e.key==='PageUp'?-0.8:0.8)*page.clientHeight);return}
+  if(e.key==='Tab'||e.key==='Escape'||/^F\d+$/.test(e.key))return;
+  if(document.activeElement!==live||!getSelection().isCollapsed)focusLive();
+  if(e.key==='*'&&S.pend&&!mod){e.preventDefault();beginUndo('format');const locked=commit(S.live+'*');S.pend='';if(locked)clearUndoBoundary();else closeUndoGroup();sync();setTyping();hideSpotlight();return}
+  if(e.key==='Enter'){e.preventDefault();const locked=enter();sync();focusLive();if(locked)hideSpotlight();return}
+  if(e.key==='Backspace'&&!S.live){e.preventDefault();return}
+  if(!mod&&(e.key.length===1||e.key==='Backspace')){beginUndo(e.key==='Backspace'?'delete':'type');setTyping();hideSpotlight()}
+});
+addEventListener('mousemove',()=>{
+  document.body.classList.remove('typing');
+});
+live.addEventListener('beforeinput',e=>{
+  const t=e.inputType;
+  if(/^(history|insertFromDrop|insertParagraph|insertLineBreak|deleteContentForward|deleteByCut)/.test(t)||(/^delete/.test(t)&&!S.live)||(!getSelection().isCollapsed&&/^(insert|delete)/.test(t)))e.preventDefault();
+});
+live.addEventListener('input',()=>{if(!composing){const locked=commit(readLive());if(locked)clearUndoBoundary();else if(undoGroup)undoGroup.last=Date.now();sync()}});
+live.addEventListener('compositionstart',()=>{composing=true;beginUndo('composition');setTyping();hideSpotlight()});
+live.addEventListener('compositionend',()=>{composing=false;const locked=commit(readLive());if(locked)clearUndoBoundary();else closeUndoGroup();sync()});
+addEventListener('paste',e=>{
+  if(e.target.closest&&e.target.closest('dialog,#panel'))return;
+  e.preventDefault();
+  const tx=(e.clipboardData.getData('text/plain')||'').replace(/\r/g,'');
+  if(!tx)return;
+  beginUndo('paste');setTyping();hideSpotlight();
+  const lines=tx.split('\n');
+  lines.forEach((part,i)=>{if(i>0)enter();if(part)commit(S.live+part)});
+  closeUndoGroup();sync();focusLive();
+});
+['cut','drop','dragover','dragstart'].forEach(n=>addEventListener(n,e=>{if(!(e.target.closest&&e.target.closest('dialog,#panel')))e.preventDefault()}));
+page.addEventListener('mousedown',e=>{
+  if(e.clientX-page.getBoundingClientRect().left>=page.clientWidth)return;
+  if(e.target.closest('#doc p'))return;
+  e.preventDefault();focusLive();
+});
+page.addEventListener('mouseup',()=>{if(getSelection().isCollapsed)focusLive()});
+document.addEventListener('copy',e=>{
+  const sl=getSelection();if(!sl.rangeCount||!doc.contains(sl.anchorNode))return;
+  e.preventDefault();e.clipboardData.setData('text/plain',sl.toString().replace(/\u200b/g,''));
+});
+document.addEventListener('selectionchange',()=>{
+  if(composing||document.activeElement!==live)return;
+  const s=getSelection();if(!s.rangeCount||!s.isCollapsed)return;
+  const n=s.anchorNode,o=s.anchorOffset;
+  const end=live.contains(n)&&(n===live?o>=n.childNodes.length:n.nodeType===3&&o>=n.length&&n===live.lastChild);
+  if(!end)setCaretEnd();
+});
+addEventListener('resize',()=>{hideSpotlight();pad();tw(true)});
+page.addEventListener('wheel',()=>{anim=null;hideSpotlight()},{passive:true});
+page.addEventListener('touchstart',()=>{anim=null;hideSpotlight()},{passive:true});
+$('#nc').onclick=closeNotes;
+document.addEventListener('mousedown',e=>{
+  if(panel.hidden)return;const t=e.target;
+  if(panel.contains(t)||t.closest('dialog,footer'))return;
+  closeNotes();
+},true);
+addEventListener('pagehide',save);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)save()});
+
+/* ---------- start ---------- */
+applyCfg();build();base=wcount(text());
+base=Math.max(0,base-wcount(S.live));
+pad();sync();focusLive();save();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{pad();tw(true)});
+</script>
+</body>
+</html>
